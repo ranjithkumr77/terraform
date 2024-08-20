@@ -1,0 +1,73 @@
+provider "aws" {
+  region = "us-east-1"
+}
+
+variable "vpc_cidr" {
+  type        = string
+  default     = "10.0.0.0/16"
+  description = "CIDR block for VPC"
+}
+
+variable "subnet_cidr_blocks" {
+  type        = list(string)
+  default     = ["10.0.1.0/24", "10.0.2.0/24", "10.0.3.0/24"]
+  description = "CIDR blocks for subnets"
+}
+
+resource "aws_vpc" "main" {
+  cidr_block = var.vpc_cidr
+
+  tags = {
+    Name = "main-vpc"
+  }
+}
+
+resource "aws_subnet" "public" {
+  vpc_id            = aws_vpc.main.id
+  cidr_block       = var.subnet_cidr_blocks[0]
+  availability_zone = "us-east-1a"
+
+  tags = {
+    Name = "public-subnet"
+  }
+}
+
+resource "aws_subnet" "private1" {
+  vpc_id            = aws_vpc.main.id
+  cidr_block       = var.subnet_cidr_blocks[1]
+  availability_zone = "us-east-1b"
+
+  tags = {
+    Name = "private-subnet-1"
+  }
+}
+
+resource "aws_subnet" "private2" {
+  vpc_id            = aws_vpc.main.id
+  cidr_block       = var.subnet_cidr_blocks[2]
+  availability_zone = "us-east-1c"
+
+  tags = {
+    Name = "private-subnet-2"
+  }
+}
+
+resource "aws_instance" "web1" {
+  ami           = "ami-04a81a99f5ec58529"
+  instance_type = "t2.micro"
+  subnet_id     = aws_subnet.public.id
+
+  tags = {
+    Name = "web-server-1"
+  }
+}
+
+resource "aws_instance" "web2" {
+  ami           = "ami-04a81a99f5ec58529"
+  instance_type = "t2.micro"
+  subnet_id     = aws_subnet.private1.id
+
+  tags = {
+    Name = "web-server-2"
+  }
+}
